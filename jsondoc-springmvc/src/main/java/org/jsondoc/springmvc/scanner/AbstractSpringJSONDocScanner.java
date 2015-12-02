@@ -158,6 +158,12 @@ public abstract class AbstractSpringJSONDocScanner extends AbstractJSONDocScanne
 		// of an object returned or a body  of a request of a method
 		for (Class<?> clazz : candidates) {
 			appendSubCandidates(clazz, subCandidates);
+			for (Method method : clazz.getDeclaredMethods()) {
+				if (JSONDocUtils.isFieldMethod(method)) {
+					subCandidates.addAll(buildJSONDocObjectsCandidates(subCandidates, method.getReturnType(), method.getGenericReturnType()));
+					appendSubCandidates(method.getReturnType(), subCandidates);
+				}
+			}
 		}
 
 		candidates.addAll(subCandidates);
@@ -243,6 +249,9 @@ public abstract class AbstractSpringJSONDocScanner extends AbstractJSONDocScanne
 	public ApiObjectDoc mergeApiObjectDoc(Class<?> clazz, ApiObjectDoc apiObjectDoc) {
 		if(clazz.isAnnotationPresent(ApiObject.class)) {
 			ApiObjectDoc jsondocApiObjectDoc = JSONDocApiObjectDocBuilder.build(clazz);
+	    if (jsondocApiObjectDoc.getFields() != null) {
+	      jsondocApiObjectDoc.getFields().addAll(apiObjectDoc.getFields());
+	    }
 			BeanUtils.copyProperties(jsondocApiObjectDoc, apiObjectDoc);
 		}
 		return apiObjectDoc;
